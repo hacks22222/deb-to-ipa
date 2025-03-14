@@ -14,17 +14,28 @@ jobs:
     steps:
       - name: Convert deb to IPA
         run: |
+          # Download the .deb file
           curl -L -o ${{ github.workspace }}/app.deb "${{ github.event.inputs.deb }}"
-          dpkg-deb -X ${{ github.workspace }}/app.deb ${{ github.workspace }}/app
-
-          mkdir -p ${{ github.workspace }}/ipa/Payload
-          cp -R ${{ github.workspace }}/app/Applications/* ${{ github.workspace }}/ipa/Payload
           
+          # Extract the .deb file
+          dpkg-deb -X ${{ github.workspace }}/app.deb ${{ github.workspace }}/app
+          
+          # List the contents to see the structure (for debugging)
+          ls -R ${{ github.workspace }}/app
+          
+          # Create the Payload directory
+          mkdir -p ${{ github.workspace }}/ipa/Payload
+          
+          # Copy the correct files (adjust this based on the output of ls command)
+          cp -R ${{ github.workspace }}/app/Library/MobileSubstrate/DynamicLibraries/* ${{ github.workspace }}/ipa/Payload
+          
+          # Create the IPA file
           cd ${{ github.workspace }}/ipa
           zip -r ${{ github.workspace }}/App.ipa .
-
+      
       - name: Upload IPA
         uses: actions/upload-artifact@v4
         with:
           name: App
           path: ${{ github.workspace }}/App.ipa
+
